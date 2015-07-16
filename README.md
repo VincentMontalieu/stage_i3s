@@ -12,4 +12,4 @@ utilisant le script training_test_separator_data_generator.sh
 ### vocabulary.cpp
 
 * Crée un vocabulaire général commun à la base de training avec k mots provenants du k-means
-* Utilisation : `./vocabulary *FeatureDetector* *DescriptorExtractor* *DescriptorMatcher* *Clusters* *DataFolder*`
+* Utilisation : `./vocabulary FeatureDetector DescriptorExtractor DescriptorMatcher Clusters DataFolder`
