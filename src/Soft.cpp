@@ -1,4 +1,4 @@
-#include "soft.hpp"
+#include "Soft.hpp"
 
 using namespace std;
 using namespace cv;

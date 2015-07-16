@@ -1,7 +1,7 @@
 #ifndef SOFT_HPP
 #define SOFT_HPP
 
-#include "tools.hpp"
+#include "Tools.hpp"
 
 class SoftBOWImgDescriptorExtractor : public cv::BOWImgDescriptorExtractor
 {

@@ -3,7 +3,7 @@ CFLAGS = -Wall -std=c++11
 EXEC_NAME = vocabulary
 INCLUDES =
 LIBS = `pkg-config --libs opencv`
-OBJ_FILES = tools.o vocabulary.o soft.o
+OBJ_FILES = Tools.o Soft.o ImageData.o Vocabulary.o
 
 all : $(EXEC_NAME)
 

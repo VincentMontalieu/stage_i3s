@@ -1,4 +1,6 @@
-#include "tools.hpp"
+#include "Tools.hpp"
+#include "ImageData.hpp"
+#include "Soft.hpp"
 
 using namespace std;
 using namespace cv;
@@ -17,26 +19,11 @@ vector<int> nbr_cluster;
 // Le chemin vers le dossier principal contenant les données
 string data_directory;
 
-class Photo
-{
-public:
-	string filename;
-	Mat bowDescriptors;
-	vector<KeyPoint> imageKeypoints;
-	Mat imageDescriptors;
-
-	Photo(string filenamep, Mat bowDescriptorsp, vector<KeyPoint> imageKeypointsp, Mat imageDescriptorsp)
-	{
-		filename = filenamep;
-		bowDescriptors = bowDescriptorsp;
-		imageKeypoints = imageKeypointsp;
-		imageDescriptors = imageDescriptorsp;
-	}
-};
+// Vecteur contenant un objet ImageData par photo de plante analysée
+vector<ImageData> plants_pics_data;
 
 void createMainVocabulary()
 {
-	vector<Photo> photos;
 	FILE *in;
 	vector<string> fileList;
 	int y = 0;
@@ -67,23 +54,25 @@ void createMainVocabulary()
 		{
 			cout << "Parsing line " << y << " from " << TRAINING_DATA_FILE << endl;
 			cout << "CONTENT: " << buffer ;
-			vector<string> line;
 
 			// return element de chaque ligne du fichier
-			line = parseLine(buffer);
+			vector<string> line = parseLine(buffer);
 
 			string file = data_directory + TRAINING_FOLDER + line[0];
 			string imgfile = file + ".jpg";
 
 			Mat colorImage = imread(imgfile.c_str());
+
 			// compute key point
 			vector<KeyPoint> imageKeypoints;
+			featureDetector->detect(colorImage, imageKeypoints);
 
-			featureDetector->detect ( colorImage, imageKeypoints );
 			// compute descriptor
 			Mat imageDescriptors;
-			descExtractor->compute ( colorImage, imageKeypoints, imageDescriptors);
+			descExtractor->compute(colorImage, imageKeypoints, imageDescriptors);
+
 			int descCount = imageDescriptors.rows;
+
 			cout << "Matching image found: " << imgfile << endl;
 			cout << "Features detected: " << descCount << endl << endl;
 
@@ -100,7 +89,7 @@ void createMainVocabulary()
 					}
 				}
 
-				photos.push_back(Photo(file, Mat(), imageKeypoints, imageDescriptors));
+				plants_pics_data.push_back(ImageData(file, Mat(), imageKeypoints, imageDescriptors));
 
 			}
 
@@ -174,8 +163,8 @@ int main(int argc, char* argv[])
 	}
 
 	/*** Generateur de BOW ***/
-	bowExtractor = new BOWImgDescriptorExtractor(descExtractor, descMatcher); // HARD ASSIGNMENT
-	// bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
+	// bowExtractor = new BOWImgDescriptorExtractor(descExtractor, descMatcher); // HARD ASSIGNMENT
+	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
 	for (int i = 4; i < argc - 1; i++)
 	{
