@@ -3,13 +3,11 @@
 
 #include "tools.hpp"
 
-class SoftBOWImgDescriptorExtractor : public BOWImgDescriptorExtractor
+class SoftBOWImgDescriptorExtractor : public cv::BOWImgDescriptorExtractor
 {
 public:
-	SoftBOWImgDescriptorExtractor( const Ptr<DescriptorExtractor>& _dextractor, const Ptr<DescriptorMatcher>& _dmatcher )
-		: BOWImgDescriptorExtractor(_dextractor, _dmatcher) {}
-
-	void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& imgDescriptor, int k );
+	SoftBOWImgDescriptorExtractor(const cv::Ptr<cv::DescriptorExtractor>& _dextractor, const cv::Ptr<cv::DescriptorMatcher>& _dmatcher);
+	void compute(const cv::Mat & image, std::vector<cv::KeyPoint> & keypoints, cv::Mat & imgDescriptor, int k);
 };
 
 #endif
