@@ -24,10 +24,12 @@ const std::string TRAINING_FOLDER = "training/";
 const std::string TRAINING_DATA_FILE = "plants_summary/training.data";
 const std::string TESTING_DATA_FILE = "plants_summary/testing.data";
 
+
 /***** Déclaration des méthodes utiles à plusieurs modules *****/
 
 int read_line(FILE *in, char *buffer, size_t max);
 std::vector<std::string> parseLine(char line[100]);
 void setDataDirectoryPath(std::string& path);
+void writeBowImageDescriptor(const std::string& file, const cv::Mat& bowImageDescriptor, std::string name);
 
 #endif

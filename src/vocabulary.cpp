@@ -3,10 +3,19 @@
 using namespace std;
 using namespace cv;
 
+/***** Outils de détection et d'extraction de features *****/
+
 Ptr<FeatureDetector> featureDetector;
 Ptr<DescriptorExtractor> descExtractor;
 Ptr<BOWImgDescriptorExtractor> bowExtractor;
 Ptr<DescriptorMatcher> descMatcher;
+
+
+// Vecteur contenant le ou les nombres de clusters à utiliser
+vector<int> nbr_cluster;
+
+// Le chemin vers le dossier principal contenant les données
+string data_directory;
 
 class Photo
 {
@@ -25,22 +34,8 @@ public:
 	}
 };
 
-void writeBowImageDescriptor(const string& file, const Mat& bowImageDescriptor, string name)
+void createMainVocabulary()
 {
-	cout << "Saving vocabulary in " << file << ".xml.gz" << endl;
-	FileStorage fs(file + ".xml.gz", FileStorage::WRITE );
-
-	if (fs.isOpened())
-	{
-		fs << name << bowImageDescriptor;
-		cout << "DONE" << endl;
-	}
-}
-
-void createMainVocabulary(string directory, vector<int> nbr_cluster)
-{
-	setDataDirectoryPath(directory);
-
 	vector<Photo> photos;
 	FILE *in;
 	vector<string> fileList;
@@ -59,11 +54,9 @@ void createMainVocabulary(string directory, vector<int> nbr_cluster)
 		bowTrainerList.push_back(bowTrainer);
 	}
 
-	cout << bowTrainerList.size() << " BOW trainer(s) for this session" << endl << endl;
-
 	int desNull = 0;
 
-	string file_to_open = directory + TRAINING_DATA_FILE;
+	string file_to_open = data_directory + TRAINING_DATA_FILE;
 
 	if ((in = fopen(file_to_open.c_str(), "rt")) != NULL)
 	{
@@ -79,7 +72,7 @@ void createMainVocabulary(string directory, vector<int> nbr_cluster)
 			// return element de chaque ligne du fichier
 			line = parseLine(buffer);
 
-			string file = directory + TRAINING_FOLDER + line[0];
+			string file = data_directory + TRAINING_FOLDER + line[0];
 			string imgfile = file + ".jpg";
 
 			Mat colorImage = imread(imgfile.c_str());
@@ -119,26 +112,32 @@ void createMainVocabulary(string directory, vector<int> nbr_cluster)
 			y++;
 		}
 
-		cout << "Images without any features: " << desNull << endl << endl;
+		cout << "Images without any features: " << desNull << endl ;
+		cout << bowTrainerList.size() << " BOW trainer(s) for this session" << endl << endl;
 		fclose(in);
 	}
 
 	else
 	{
-		cout << "Probleme fichier : " << directory << TRAINING_DATA_FILE << endl;
+		cout << "Probleme fichier : " << data_directory << TRAINING_DATA_FILE << endl;
 	}
 
 	for (size_t i = 0; i < bowTrainerList.size(); i++)
 	{
 		cout << "Clustering .... " << nbr_cluster[i] << endl;
 		Mat vocabulary = bowTrainerList[i]->cluster();
-		string vocabulary_file_path = directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]);
+		string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]);
 		cout << "Clustering completed" << endl << endl;
 		writeBowImageDescriptor(vocabulary_file_path, vocabulary, "vocabulary");
 		vocabulary_file_path.clear();
 		vocabulary.release();
 	}
 }
+
+// void createBOWHistograms(argv[5], nbr_cluster)
+// {
+
+// }
 
 void help(char* argv[])
 {
@@ -147,7 +146,7 @@ void help(char* argv[])
 
 int main(int argc, char* argv[])
 {
-	cv::initModule_nonfree();
+	initModule_nonfree();
 
 	if (argc < 6)
 	{
@@ -174,10 +173,21 @@ int main(int argc, char* argv[])
 		cout << "probleme matcher";
 	}
 
-	// Generateur de BOW
-	bowExtractor = new BOWImgDescriptorExtractor(descExtractor, descMatcher);
-	vector<int> nbr_cluster {atoi(argv[4])};
-	createMainVocabulary(argv[5], nbr_cluster);
+	/*** Generateur de BOW ***/
+	bowExtractor = new BOWImgDescriptorExtractor(descExtractor, descMatcher); // HARD ASSIGNMENT
+	// bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
+
+	for (int i = 4; i < argc - 1; i++)
+	{
+		nbr_cluster.push_back(atoi(argv[i]));
+	}
+
+	data_directory = argv[5];
+
+	setDataDirectoryPath(data_directory);
+
+	createMainVocabulary();
+	//createBOWHistograms(argv[5], nbr_cluster);
 
 	return 0;
 }

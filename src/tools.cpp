@@ -39,3 +39,15 @@ void setDataDirectoryPath(string& path)
 		}
 	}
 }
+
+void writeBowImageDescriptor(const string& file, const Mat& bowImageDescriptor, string name)
+{
+	cout << "Saving in " << file << ".xml.gz" << endl;
+	FileStorage fs(file + ".xml.gz", FileStorage::WRITE );
+
+	if (fs.isOpened())
+	{
+		fs << name << bowImageDescriptor;
+		cout << "DONE" << endl;
+	}
+}
