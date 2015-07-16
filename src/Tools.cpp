@@ -40,14 +40,40 @@ void setDataDirectoryPath(string& path)
 	}
 }
 
-void writeBowImageDescriptor(const string& file, const Mat& bowImageDescriptor, string name)
+void writeBOWImageDescriptor(const string& file, const Mat& bowImageDescriptor, string name)
 {
-	cout << "Saving in " << file << ".xml.gz" << endl;
+	cout << "Saving in " << file << ".xml.gz" << endl << endl;
 	FileStorage fs(file + ".xml.gz", FileStorage::WRITE );
 
 	if (fs.isOpened())
 	{
 		fs << name << bowImageDescriptor;
-		cout << "DONE" << endl;
 	}
+}
+
+Mat loadBOWDescriptor(string filename, string type)
+{
+	Mat bowDescriptor;
+	FileStorage fs(filename, FileStorage::READ);
+
+	if (fs.isOpened())
+	{
+		if ( type == "imageDescriptor" )
+		{
+			fs["imageDescriptor"] >> bowDescriptor;
+		}
+
+		else if ( type == "vocabulary" )
+		{
+			fs["vocabulary"] >> bowDescriptor;
+		}
+	}
+
+	else
+	{
+		cout << "Couldn't open " << filename << endl;
+		exit(-1);
+	}
+
+	return bowDescriptor;
 }

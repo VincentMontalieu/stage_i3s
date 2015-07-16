@@ -8,7 +8,7 @@ SoftBOWImgDescriptorExtractor::SoftBOWImgDescriptorExtractor(const Ptr<Descripto
 
 }
 
-void SoftBOWImgDescriptorExtractor::compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& imgDescriptor, int k )
+void SoftBOWImgDescriptorExtractor::compute(const Mat& image, vector<KeyPoint>& keypoints, Mat& imgDescriptor, int k)
 {
 	imgDescriptor.release();
 

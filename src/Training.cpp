@@ -9,23 +9,27 @@ using namespace cv;
 
 Ptr<FeatureDetector> featureDetector;
 Ptr<DescriptorExtractor> descExtractor;
-Ptr<BOWImgDescriptorExtractor> bowExtractor;
+Ptr<SoftBOWImgDescriptorExtractor> bowExtractor;
 Ptr<DescriptorMatcher> descMatcher;
 
 
 // Vecteur contenant le ou les nombres de clusters à utiliser
 vector<int> nbr_cluster;
 
-// Le chemin vers le dossier principal contenant les données
-string data_directory;
+// Le chemin vers le dossier principal contenant les données ainsi que celui vers le fichier training.data
+string data_directory, training_data;
 
 // Vecteur contenant un objet ImageData par photo de plante analysée
 vector<ImageData> plants_pics_data;
 
+/**** Méthodes ****/
+void calcDescriptor(Mat vocabulary, vector<ImageData> data);
+void createMainVocabulary();
+void createBOWHistograms();
+
 void createMainVocabulary()
 {
 	FILE *in;
-	vector<string> fileList;
 	int y = 0;
 
 	vector<Mat> descriptors;
@@ -43,13 +47,11 @@ void createMainVocabulary()
 
 	int desNull = 0;
 
-	string file_to_open = data_directory + TRAINING_DATA_FILE;
-
-	if ((in = fopen(file_to_open.c_str(), "rt")) != NULL)
+	if ((in = fopen(training_data.c_str(), "rt")) != NULL)
 	{
 		char buffer[100];
 
-		// pour chaque ligne de training.data
+		// Pour chaque ligne de training.data
 		while (read_line(in, buffer, sizeof buffer))
 		{
 			cout << "Parsing line " << y << " from " << TRAINING_DATA_FILE << endl;
@@ -58,8 +60,7 @@ void createMainVocabulary()
 			// return element de chaque ligne du fichier
 			vector<string> line = parseLine(buffer);
 
-			string file = data_directory + TRAINING_FOLDER + line[0];
-			string imgfile = file + ".jpg";
+			string imgfile = data_directory + TRAINING_FOLDER + line[0] + ".jpg";
 
 			Mat colorImage = imread(imgfile.c_str());
 
@@ -78,8 +79,6 @@ void createMainVocabulary()
 
 			if (!imageDescriptors.empty())
 			{
-				fileList.push_back(file);
-
 				for (int j = 0; j < descCount; j++)
 				{
 					for (size_t i = 0; i < bowTrainerList.size(); i++)
@@ -89,7 +88,7 @@ void createMainVocabulary()
 					}
 				}
 
-				plants_pics_data.push_back(ImageData(file, Mat(), imageKeypoints, imageDescriptors));
+				plants_pics_data.push_back(ImageData(line[0] + ".jpg" , Mat(), imageKeypoints, imageDescriptors));
 
 			}
 
@@ -103,6 +102,7 @@ void createMainVocabulary()
 
 		cout << "Images without any features: " << desNull << endl ;
 		cout << bowTrainerList.size() << " BOW trainer(s) for this session" << endl << endl;
+
 		fclose(in);
 	}
 
@@ -115,18 +115,69 @@ void createMainVocabulary()
 	{
 		cout << "Clustering .... " << nbr_cluster[i] << endl;
 		Mat vocabulary = bowTrainerList[i]->cluster();
-		string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]);
 		cout << "Clustering completed" << endl << endl;
-		writeBowImageDescriptor(vocabulary_file_path, vocabulary, "vocabulary");
+
+		string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]);
+		writeBOWImageDescriptor(vocabulary_file_path, vocabulary, "vocabulary");
+		cout << "DONE" << endl;
+
 		vocabulary_file_path.clear();
 		vocabulary.release();
 	}
 }
 
-// void createBOWHistograms(argv[5], nbr_cluster)
-// {
+void createBOWHistograms()
+{
+	cout << "CREATING HISTOGRAMS NOW ...." << endl;
+	cout << nbr_cluster.size() << " BOW trainer(s) for this session" << endl << endl;
 
-// }
+	for (size_t i = 0; i < nbr_cluster.size(); i++)
+	{
+		cout << "Using " << nbr_cluster[i] << " ...." << endl << endl;
+		string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]) + ".xml.gz";
+		Mat vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
+		cout << "Vocabulary loaded" << endl;
+		calcDescriptor(vocabulary, plants_pics_data);
+	}
+
+	cout << "HISTOGRAMS CREATED" << endl;
+}
+
+void calcDescriptor(Mat vocabulary, vector<ImageData> data)
+{
+	bowExtractor->setVocabulary(vocabulary);
+	cout << "Vocabulary set" << endl;
+
+	for (size_t i = 0; i < data.size(); i++)
+	{
+		Mat bowDescriptor;
+		string single_img_name = data[i].filename;
+		string img_to_open = data_directory + TRAINING_FOLDER + single_img_name;
+		vector<KeyPoint> features = data[i].imageKeypoints;
+		Mat colorImage = imread(img_to_open);
+
+		cout << img_to_open << " loaded" << endl;
+
+		if (!colorImage.cols)
+		{
+			cout << "Error while opening file " << img_to_open << endl;
+		}
+
+		// bowExtractor->compute(colorImage, features, bowDescriptor); // HARD ASSIGNMENT
+
+		// Le dernier paramètre est le nombre de plus proches voisins autorisés pour le soft assignment
+		bowExtractor->compute(colorImage, features, bowDescriptor, 5); // SOFT ASSIGNMENT
+
+		cout << "Histogram computed for " << img_to_open << endl;
+
+		if (!bowDescriptor.cols)
+		{
+			cout << "Error while computing BOW histogram for file " << img_to_open << endl;
+		}
+
+		writeBOWImageDescriptor(data_directory + PLANTS_VOCABS_FOLDER + single_img_name, bowDescriptor, "imageDescriptor");
+	}
+}
 
 void help(char* argv[])
 {
@@ -163,7 +214,6 @@ int main(int argc, char* argv[])
 	}
 
 	/*** Generateur de BOW ***/
-	// bowExtractor = new BOWImgDescriptorExtractor(descExtractor, descMatcher); // HARD ASSIGNMENT
 	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
 	for (int i = 4; i < argc - 1; i++)
@@ -174,9 +224,10 @@ int main(int argc, char* argv[])
 	data_directory = argv[5];
 
 	setDataDirectoryPath(data_directory);
+	training_data = data_directory + TRAINING_DATA_FILE;
 
 	createMainVocabulary();
-	//createBOWHistograms(argv[5], nbr_cluster);
+	createBOWHistograms();
 
 	return 0;
 }

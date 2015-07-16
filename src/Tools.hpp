@@ -30,6 +30,7 @@ const std::string TESTING_DATA_FILE = "plants_summary/testing.data";
 int read_line(FILE *in, char *buffer, size_t max);
 std::vector<std::string> parseLine(char line[100]);
 void setDataDirectoryPath(std::string& path);
-void writeBowImageDescriptor(const std::string& file, const cv::Mat& bowImageDescriptor, std::string name);
+void writeBOWImageDescriptor(const std::string& file, const cv::Mat& bowImageDescriptor, std::string name);
+cv::Mat loadBOWDescriptor(std::string filename, std::string type);
 
 #endif
