@@ -12,14 +12,21 @@
 #include <string>
 
 /*
-* Classe contenant les informations utiles pour un fichier image (descripteurs SIFT, nom de fichier...)
+* Classe contenant les informations utiles pour un fichier image
 */
 class ImageData
 {
 public:
+	// Le nom du fichier avec chemin relatif
 	std::string filename;
+
+	// La matrice contenant l'histogramme d'une image (pas utilisée pour le moment)
 	cv::Mat bowDescriptors;
+
+	// Le vecteur contenant les points d'intérêt d'une image
 	std::vector<cv::KeyPoint> imageKeypoints;
+
+	// La matrice contenant les descripteurs SIFT d'une image
 	cv::Mat imageDescriptors;
 
 	ImageData(std::string filenamep, cv::Mat bowDescriptorsp, std::vector<cv::KeyPoint> imageKeypointsp, cv::Mat imageDescriptorsp);

@@ -22,10 +22,20 @@ string data_directory, training_data;
 // Vecteur contenant un objet ImageData par photo de plante analysée
 vector<ImageData> plants_pics_data;
 
+// Représente une ligne de texte;
+vector<string> text_line;
+
+// Représente un ensemble de lignes de texte
+vector<vector<string>> text_lines;
+
+// Représente l'ensemble des classes (plantes) présentes dans la base d'apprentisage
+vector<string> classes;
+
 /**** Méthodes ****/
 void calcDescriptor(Mat vocabulary, vector<ImageData> data);
 void createMainVocabulary();
 void createBOWHistograms();
+void trainSVM();
 
 void createMainVocabulary()
 {
@@ -54,13 +64,18 @@ void createMainVocabulary()
 		// Pour chaque ligne de training.data
 		while (read_line(in, buffer, sizeof buffer))
 		{
-			cout << "Parsing line " << y << " from " << TRAINING_DATA_FILE << endl;
+			cout << "Parsing text_line " << y << " from " << TRAINING_DATA_FILE << endl;
 			cout << "CONTENT: " << buffer ;
 
-			// return element de chaque ligne du fichier
-			vector<string> line = parseLine(buffer);
+			text_line = parseLine(buffer);
+			text_lines.push_back(text_line);
 
-			string imgfile = data_directory + TRAINING_FOLDER + line[0] + ".jpg";
+			if (find(classes.begin(), classes.end(), text_line[1]) == classes.end())
+			{
+				classes.push_back(text_line[1]);
+			}
+
+			string imgfile = data_directory + TRAINING_FOLDER + text_line[0] + ".jpg";
 
 			Mat colorImage = imread(imgfile.c_str());
 
@@ -88,7 +103,7 @@ void createMainVocabulary()
 					}
 				}
 
-				plants_pics_data.push_back(ImageData(line[0] + ".jpg" , Mat(), imageKeypoints, imageDescriptors));
+				plants_pics_data.push_back(ImageData(text_line[0] + ".jpg" , Mat(), imageKeypoints, imageDescriptors));
 
 			}
 
@@ -179,6 +194,11 @@ void calcDescriptor(Mat vocabulary, vector<ImageData> data)
 	}
 }
 
+void trainSVM()
+{
+
+}
+
 void help(char* argv[])
 {
 	cout << "Usage: " << argv[0] << "FeatureDetector DescriptorExtractor DescriptorMatcher NbrCluster Directory" << endl;
@@ -228,6 +248,7 @@ int main(int argc, char* argv[])
 
 	createMainVocabulary();
 	createBOWHistograms();
+	trainSVM();
 
 	return 0;
 }
