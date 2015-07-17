@@ -31,14 +31,22 @@ vector<vector<string>> text_lines;
 // Représente l'ensemble des classes (plantes) présentes dans la base d'apprentisage
 vector<string> classes;
 
+// La matrice qui contient le vocabulaire principal
+Mat vocabulary;
+
+// Le taux d'erreur toléré pour le SVM
+int c;
+
 /**** Méthodes ****/
-void calcDescriptor(Mat vocabulary, vector<ImageData> data);
+void calcDescriptor(size_t i);
 void createMainVocabulary();
 void createBOWHistograms();
 void trainSVM();
 
 void createMainVocabulary()
 {
+	cout << endl << endl << "********* MAIN VOCABULARY *********" << endl << endl;
+
 	FILE *in;
 	int y = 0;
 
@@ -143,6 +151,7 @@ void createMainVocabulary()
 
 void createBOWHistograms()
 {
+	cout << endl << endl << "********* HISTOGRAMS *********" << endl << endl;
 	cout << "CREATING HISTOGRAMS NOW ...." << endl;
 	cout << nbr_cluster.size() << " BOW trainer(s) for this session" << endl << endl;
 
@@ -150,25 +159,25 @@ void createBOWHistograms()
 	{
 		cout << "Using " << nbr_cluster[i] << " ...." << endl << endl;
 		string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]) + ".xml.gz";
-		Mat vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
+		vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
 		cout << "Vocabulary loaded" << endl;
-		calcDescriptor(vocabulary, plants_pics_data);
+		calcDescriptor(i);
 	}
 
 	cout << "HISTOGRAMS CREATED" << endl;
 }
 
-void calcDescriptor(Mat vocabulary, vector<ImageData> data)
+void calcDescriptor(size_t cln)
 {
 	bowExtractor->setVocabulary(vocabulary);
 	cout << "Vocabulary set" << endl;
 
-	for (size_t i = 0; i < data.size(); i++)
+	for (size_t i = 0; i < plants_pics_data.size(); i++)
 	{
 		Mat bowDescriptor;
-		string single_img_name = data[i].filename;
+		string single_img_name = plants_pics_data[i].filename;
 		string img_to_open = data_directory + TRAINING_FOLDER + single_img_name;
-		vector<KeyPoint> features = data[i].imageKeypoints;
+		vector<KeyPoint> features = plants_pics_data[i].imageKeypoints;
 		Mat colorImage = imread(img_to_open);
 
 		cout << img_to_open << " loaded" << endl;
@@ -190,25 +199,78 @@ void calcDescriptor(Mat vocabulary, vector<ImageData> data)
 			cout << "Error while computing BOW histogram for file " << img_to_open << endl;
 		}
 
-		writeBOWImageDescriptor(data_directory + PLANTS_VOCABS_FOLDER + single_img_name, bowDescriptor, "imageDescriptor");
+		writeBOWImageDescriptor(data_directory + PLANTS_VOCABS_FOLDER + single_img_name + "." + to_string(nbr_cluster[cln]), bowDescriptor, "imageDescriptor");
 	}
 }
 
 void trainSVM()
 {
+	cout << endl << endl << "********* SVM TRAINING *********" << endl << endl;
 
+	for (size_t cln = 0; cln < nbr_cluster.size(); cln++)
+	{
+		Mat* trainData = NULL;
+		trainData = new Mat((int)text_lines.size(), vocabulary.rows, CV_32FC1);
+
+		cout << "Loading descriptors .... " << endl;
+
+		for (size_t i = 0; i < text_lines.size(); i++)
+		{
+			string descriptor_file_path = data_directory + PLANTS_VOCABS_FOLDER + text_lines[i][0] + ".jpg." + to_string(nbr_cluster[cln]) + ".xml.gz";
+			Mat bowDescriptor = loadBOWDescriptor(descriptor_file_path, "imageDescriptor");
+			Mat submat = trainData->row((int)i);
+			bowDescriptor.copyTo(submat);
+		}
+
+		for (size_t i = 0; i < classes.size(); i++)
+		{
+			// Matrice contenant les labels, ici 1 ou -1
+			Mat* responses = new Mat((int)text_lines.size(), 1, CV_32SC1);
+
+			for (size_t j = 0; j < text_lines.size(); j++)
+			{
+				responses->at<int>((int)j) = (text_lines[j][1] == classes[i]) ? 1 : -1;
+			}
+
+			CvSVMParams params;
+			params.svm_type = CvSVM::C_SVC;
+			params.kernel_type = CvSVM::LINEAR;
+			params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 10000, 10); // Les deux derniers paramètres sont le nombre max d'itérations et la précision
+			params.C = c;
+
+			CvSVM* svm = new CvSVM();
+
+			cout << "SVM training on class: " << classes[i] << " ...." << endl;
+
+			// Train the SVM
+			svm->train(*trainData, *responses, Mat(), Mat(), params);
+
+			cout << "SVM trained for " << classes[i] << endl;
+			string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string(nbr_cluster[cln]) + "." + to_string(c) + ".xml.gz";
+			cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
+
+			svm->save(svm_file_to_save.c_str());
+
+			delete svm;
+			delete responses;
+		}
+
+		delete trainData;
+	}
+
+	cout << endl << "DONE TRAINING SVM" << endl;
 }
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "FeatureDetector DescriptorExtractor DescriptorMatcher NbrCluster Directory" << endl;
+	cout << "Usage: " << argv[0] << "FeatureDetector DescriptorExtractor DescriptorMatcher NbrCluster SVM_c Directory" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	initModule_nonfree();
 
-	if (argc < 6)
+	if (argc < 7)
 	{
 		help(argv);
 		exit(-1);
@@ -236,12 +298,14 @@ int main(int argc, char* argv[])
 	/*** Generateur de BOW ***/
 	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
-	for (int i = 4; i < argc - 1; i++)
+	for (int i = 4; i < argc - 2; i++)
 	{
 		nbr_cluster.push_back(atoi(argv[i]));
 	}
 
-	data_directory = argv[5];
+	c = atoi(argv[5]);
+
+	data_directory = argv[6];
 
 	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;
