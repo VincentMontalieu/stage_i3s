@@ -1,4 +1,3 @@
-#include "Tools.hpp"
 #include "ImageData.hpp"
 #include "Soft.hpp"
 
@@ -38,10 +37,12 @@ Mat vocabulary;
 int c;
 
 /**** Méthodes ****/
+
 void calcDescriptor(size_t i);
 void createMainVocabulary();
 void createBOWHistograms();
 void trainSVM();
+
 
 void createMainVocabulary()
 {

@@ -1,11 +1,13 @@
 CC = g++
 CFLAGS = -Wall -std=c++11
-EXEC_NAME = training.out
+EXEC_NAME_1 = training.out
+EXEC_NAME_2 = testing.out
 INCLUDES =
 LIBS = `pkg-config --libs opencv`
-OBJ_FILES = Tools.o Soft.o ImageData.o Training.o
+OBJ_FILES_1 = Tools.o Soft.o ImageData.o Training.o
+OBJ_FILES_2 = Tools.o Soft.o Testing.o
 
-all : $(EXEC_NAME)
+all : $(EXEC_NAME_1) $(EXEC_NAME_2)
 
 clean :
 	rm *.o
@@ -13,8 +15,11 @@ clean :
 cleanall :
 	rm *.out *.o
 
-$(EXEC_NAME) : $(OBJ_FILES)
-	$(CC) -o $(EXEC_NAME) $(OBJ_FILES) $(LIBS)
+$(EXEC_NAME_1) : $(OBJ_FILES_1)
+	$(CC) -o $(EXEC_NAME_1) $(OBJ_FILES_1) $(LIBS)
+
+$(EXEC_NAME_2) : $(OBJ_FILES_2)
+	$(CC) -o $(EXEC_NAME_2) $(OBJ_FILES_2) $(LIBS)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<

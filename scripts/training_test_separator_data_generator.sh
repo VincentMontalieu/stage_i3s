@@ -48,6 +48,8 @@ do
 	Type=`grep -oPm1 "(?<=<Type>)[^<]+" $file`
 
 	echo $FileName:$ClassId:$Content:$Type >> plants_summary/training.data
+
+	#echo $FileName:${ClassId// /_}:$Content:$Type >> plants_summary/training.data
 done
 
 for file in testing/*.xml
@@ -58,4 +60,6 @@ do
 	Type=`grep -oPm1 "(?<=<Type>)[^<]+" $file`
 
 	echo $FileName:$ClassId:$Content:$Type >> plants_summary/testing.data
+
+	#echo $FileName:${ClassId// /_}:$Content:$Type >> plants_summary/testing.data
 done
