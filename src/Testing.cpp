@@ -145,7 +145,7 @@ Mat calcDescriptor(string imageName)
 
 	else
 	{
-		cout << "Computing histogram for: " << imageName << endl ;
+		cout << "Computing histogram" << endl ;
 	}
 
 	return bowDescriptor;
@@ -167,7 +167,7 @@ void loadSVM(int cln)
 
 void testSVM(string filename, Mat bowDescriptors)
 {
-	cout << "SVM prediction for: " << filename << endl;
+	cout << "SVM prediction" << endl;
 
 	ofstream out;
 	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
@@ -238,14 +238,13 @@ void computePredictResults()
 				global_score += 1.0;
 			}
 
-			global_score /= predictions.size();
-			round_score = global_score * 100;
-			//global_score = global_score * 100;
+			round_score = 100 * global_score / predictions.size();
 
 			cout << "For the IMAGE of actual CLASS: " << testing_classes[j] << endl;
 			cout << "The prediction was: " << predictions[j] << endl << endl;
 		}
 
+		cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
 		cout << "GLOBAL SCORE: " << ceil(round_score) << " % " << endl << endl;
 	}
 }
