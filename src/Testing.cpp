@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <utility>
 #include <math.h>
+#include <chrono>
 
 using namespace std;
 using namespace cv;
+using namespace std::chrono;
 
 /***** Outils de détection et d'extraction de features *****/
 
@@ -27,7 +29,7 @@ vector<string> training_classes, testing_classes, testing_files;
 Mat vocabulary;
 
 // Le taux d'erreur toléré pour le SVM
-int c;
+double c;
 
 // Le vecteur contenant tous les SVM chargés
 vector<CvSVM*> svms;
@@ -245,7 +247,7 @@ void computePredictResults()
 		}
 
 		cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
-		cout << "GLOBAL SCORE: " << ceil(round_score) << " % " << endl << endl;
+		cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
 	}
 }
 
@@ -256,6 +258,8 @@ void help(char* argv[])
 
 int main(int argc, char* argv[])
 {
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
+
 	initModule_nonfree();
 
 	if (argc < 7)
@@ -291,7 +295,7 @@ int main(int argc, char* argv[])
 		nbr_cluster.push_back(atoi(argv[i]));
 	}
 
-	c = atoi(argv[5]);
+	c = atof(argv[5]);
 
 	data_directory = argv[6];
 
@@ -304,6 +308,12 @@ int main(int argc, char* argv[])
 
 	getClasses();
 	computePredictResults();
+
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+
+	cout << "TESTING TIME: " << duration << " sec" <<endl;
 
 	return 0;
 }
