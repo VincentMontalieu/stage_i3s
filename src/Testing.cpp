@@ -242,8 +242,9 @@ void computePredictResults()
 
 			round_score = 100 * global_score / predictions.size();
 
-			cout << "For the IMAGE of actual CLASS: " << testing_classes[j] << endl;
-			cout << "The prediction was: " << predictions[j] << endl << endl;
+			cout << "File: " << testing_files[j] << ".jpg" << endl;
+			cout << "Actual class: " << testing_classes[j] << endl;
+			cout << "Prediction was: " << predictions[j] << endl << endl;
 		}
 
 		cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
