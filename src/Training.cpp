@@ -75,7 +75,7 @@ void createMainVocabulary()
 		// Pour chaque ligne de training.data
 		while (read_line(in, buffer, sizeof buffer))
 		{
-			cout << "Parsing text_line " << y << " from " << TRAINING_DATA_FILE << endl;
+			cout << "Parsing line " << y << " from " << TRAINING_DATA_FILE << endl;
 			cout << "CONTENT: " << buffer ;
 
 			text_line = parseLine(buffer);
@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
 
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
 
-	cout << "TRAINING TIME: " << duration << " sec" <<endl;
+	cout << "TRAINING TIME: " << convertTime(duration) << endl;
 
 	return 0;
 }

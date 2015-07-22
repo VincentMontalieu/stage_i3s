@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
 
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
 
-	cout << "TESTING TIME: " << duration << " sec" <<endl;
+	cout << "TESTING TIME: " << convertTime(duration) << endl;
 
 	return 0;
 }

@@ -32,5 +32,6 @@ std::vector<std::string> parseLine(char line[100]);
 void setDataDirectoryPath(std::string& path);
 void writeBOWImageDescriptor(const std::string& file, const cv::Mat& bowImageDescriptor, std::string name);
 cv::Mat loadBOWDescriptor(std::string filename, std::string type);
+std::string convertTime(int seconds);
 
 #endif

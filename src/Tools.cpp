@@ -77,3 +77,11 @@ Mat loadBOWDescriptor(string filename, string type)
 
 	return bowDescriptor;
 }
+
+string convertTime(int seconds)
+{
+	int minutes = seconds / 60;
+	int rem_seconds = seconds % 60;
+	string time_string = to_string(minutes) + " min " + to_string(rem_seconds) + " sec";
+	return time_string;
+}
