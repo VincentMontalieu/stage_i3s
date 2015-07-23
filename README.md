@@ -11,7 +11,7 @@ Projet initié par Mohamed Issolah, repris par Vincent Montalieu dans le cadre d
 ## Architecture
 
 * Le dossier contenant les données doit recevoir tous les fichiers JPG et XML puis être mis en place en
-utilisant le script `./training_test_separator_data_generator.sh` présent dans le dossier *scripts*
+utilisant le script `./scaffolding.sh` présent dans le dossier *scripts*
 
 * Le nom du dossier contenant les données est libre.
 
