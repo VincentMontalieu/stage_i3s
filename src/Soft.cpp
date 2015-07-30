@@ -2,6 +2,8 @@
 
 using namespace std;
 using namespace cv;
+using namespace cv::xfeatures2d;
+using namespace cv::ml;
 
 SoftBOWImgDescriptorExtractor::SoftBOWImgDescriptorExtractor(const Ptr<DescriptorExtractor>& _dextractor, const Ptr<DescriptorMatcher>& _dmatcher) : BOWImgDescriptorExtractor(_dextractor, _dmatcher)
 {

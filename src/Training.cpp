@@ -5,11 +5,13 @@
 using namespace std;
 using namespace cv;
 using namespace std::chrono;
+using namespace cv::xfeatures2d;
+using namespace cv::ml;
 
 /***** Outils de détection et d'extraction de features *****/
 
-Ptr<FeatureDetector> featureDetector;
-Ptr<DescriptorExtractor> descExtractor;
+Ptr<SiftFeatureDetector> featureDetector;
+Ptr<SiftDescriptorExtractor> descExtractor;
 Ptr<SoftBOWImgDescriptorExtractor> bowExtractor;
 Ptr<DescriptorMatcher> descMatcher;
 
@@ -235,26 +237,23 @@ void trainSVM()
 				responses->at<int>((int)j) = (text_lines[j][1] == classes[i]) ? 1 : -1;
 			}
 
-			CvSVMParams params;
-			params.svm_type = CvSVM::C_SVC;
-			params.kernel_type = CvSVM::LINEAR;
-			params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 10000, 10); // Les deux derniers paramètres sont le nombre max d'itérations et la précision
-			params.C = c;
-
-			CvSVM* svm = new CvSVM();
+			Ptr<SVM> svm = SVM::create();
+			svm->setType(SVM::C_SVC);
+			svm->setKernel(SVM::LINEAR);
+			svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
+			svm->setC(c);
 
 			cout << "SVM training on class: " << classes[i] << " ...." << endl;
 
 			// Train the SVM
-			svm->train(*trainData, *responses, Mat(), Mat(), params);
+			svm->train(*trainData, ROW_SAMPLE, *responses);
 
 			cout << "SVM trained for " << classes[i] << endl;
 			string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string(nbr_cluster[cln]) + "." + to_string(c) + ".xml.gz";
 			cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
 
-			svm->save(svm_file_to_save.c_str());
+			svm->save(svm_file_to_save);
 
-			delete svm;
 			delete responses;
 		}
 
@@ -266,26 +265,24 @@ void trainSVM()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "FeatureDetector DescriptorExtractor DescriptorMatcher NbrCluster SVM_c Directory" << endl;
+	cout << "Usage: " << argv[0] << "Directory SVM_c NbrCluster" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	initModule_nonfree();
-
-	if (argc < 7)
+	if (argc < 4)
 	{
 		help(argv);
 		exit(-1);
 	}
 
 	// detecteur de POI
-	featureDetector = FeatureDetector::create(argv[1]);
+	featureDetector = SIFT::create();
 
 	// descripteur de POI
-	descExtractor = DescriptorExtractor::create(argv[2]);
+	descExtractor = SIFT::create();
 
 	if (featureDetector.empty() || descExtractor.empty())
 	{
@@ -293,7 +290,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	descMatcher = DescriptorMatcher::create(argv[3]);
+	descMatcher = DescriptorMatcher::create("BruteForce");
 
 	if (descMatcher.empty())
 	{
@@ -303,14 +300,14 @@ int main(int argc, char* argv[])
 	/*** Generateur de BOW ***/
 	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
-	for (int i = 4; i < argc - 2; i++)
+	data_directory = argv[1];
+
+	c = atof(argv[2]);
+
+	for (int i = 3; i < argc; i++)
 	{
 		nbr_cluster.push_back(atoi(argv[i]));
 	}
-
-	c = atof(argv[5]);
-
-	data_directory = argv[6];
 
 	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;

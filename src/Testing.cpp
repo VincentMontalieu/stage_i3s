@@ -8,11 +8,13 @@
 using namespace std;
 using namespace cv;
 using namespace std::chrono;
+using namespace cv::xfeatures2d;
+using namespace cv::ml;
 
 /***** Outils de détection et d'extraction de features *****/
 
-Ptr<FeatureDetector> featureDetector;
-Ptr<DescriptorExtractor> descExtractor;
+Ptr<SiftFeatureDetector> featureDetector;
+Ptr<SiftDescriptorExtractor> descExtractor;
 Ptr<SoftBOWImgDescriptorExtractor> bowExtractor;
 Ptr<DescriptorMatcher> descMatcher;
 
@@ -32,7 +34,7 @@ Mat vocabulary;
 double c;
 
 // Le vecteur contenant tous les SVM chargés
-vector<CvSVM*> svms;
+vector<Ptr<SVM>> svms;
 
 // Le vecteur contenant les classes prédites
 vector<string> predictions;
@@ -159,8 +161,7 @@ void loadSVM(int cln)
 	{
 		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string(nbr_cluster[cln]) + "." + to_string(c) + ".xml.gz";
 		cout << "Loading SVM: " << svm_to_load << endl;
-		CvSVM* svm = new CvSVM();
-		svm->load(svm_to_load.c_str());
+		Ptr<SVM> svm = Algorithm::load<SVM>(svm_to_load);
 		svms.push_back(svm);
 	}
 
@@ -185,8 +186,8 @@ void testSVM(string filename, Mat bowDescriptors)
 	{
 		float signMul = 1.f;
 
-		float classVal = svms[svm_index]->predict(bowDescriptors, false);
-		float scoreVal = svms[svm_index]->predict(bowDescriptors, true);
+		float classVal = svms[svm_index]->predict(bowDescriptors);
+		float scoreVal = svms[svm_index]->predict(bowDescriptors, noArray(), StatModel::Flags::RAW_OUTPUT);
 
 		signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
 		score = signMul * scoreVal;
@@ -261,19 +262,17 @@ int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	initModule_nonfree();
-
-	if (argc < 7)
+	if (argc < 4)
 	{
 		help(argv);
 		exit(-1);
 	}
 
 	// detecteur de POI
-	featureDetector = FeatureDetector::create(argv[1]);
+	featureDetector = SIFT::create();
 
 	// descripteur de POI
-	descExtractor = DescriptorExtractor::create(argv[2]);
+	descExtractor = SIFT::create();
 
 	if (featureDetector.empty() || descExtractor.empty())
 	{
@@ -281,7 +280,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	descMatcher = DescriptorMatcher::create(argv[3]);
+	descMatcher = DescriptorMatcher::create("BruteForce");
 
 	if (descMatcher.empty())
 	{
@@ -291,14 +290,14 @@ int main(int argc, char* argv[])
 	/*** Generateur de BOW ***/
 	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
-	for (int i = 4; i < argc - 2; i++)
+	data_directory = argv[1];
+
+	c = atof(argv[2]);
+
+	for (int i = 3; i < argc; i++)
 	{
 		nbr_cluster.push_back(atoi(argv[i]));
 	}
-
-	c = atof(argv[5]);
-
-	data_directory = argv[6];
 
 	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;

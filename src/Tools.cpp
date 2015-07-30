@@ -2,6 +2,8 @@
 
 using namespace std;
 using namespace cv;
+using namespace cv::xfeatures2d;
+using namespace cv::ml;
 
 /***** Implémentation des méthodes *****/
 
