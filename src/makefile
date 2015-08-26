@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -Wall -std=c++11
 EXEC_NAME_1 = training.out
 EXEC_NAME_2 = testing.out
-EXEC_NAME_2 = testing_single_file.out
+EXEC_NAME_3 = testing_single_file.out
 INCLUDES =
 LIBS = `pkg-config --libs opencv`
 OBJ_FILES_1 = Tools.o Soft.o ImageData.o Training.o

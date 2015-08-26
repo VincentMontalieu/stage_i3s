@@ -18,14 +18,17 @@ Ptr<SiftDescriptorExtractor> descExtractor;
 Ptr<SoftBOWImgDescriptorExtractor> bowExtractor;
 Ptr<DescriptorMatcher> descMatcher;
 
-// Le chemin vers le dossier principal contenant les données ainsi que celui vers le fichier training.data
-string data_directory, training_data, testing_data;
+// Le chemin vers le dossier principal contenant les données, celui vers le fichier training.data ainsi que celui vers l'image client
+string data_directory, training_data, uploaded_image;
+
+// Le chemin vers le fichier de log
+string log_file;
 
 // Le nombre de clusters à utiliser
 int nbr_cluster;
 
-// Représente l'ensemble des classes (plantes) présentes dans la base d'apprentisage et dans la base de test
-vector<string> training_classes, testing_classes, testing_files;
+// Représente l'ensemble des classes (plantes) présentes dans la base d'apprentisage
+vector<string> training_classes;
 
 // La matrice qui contient le vocabulaire principal
 Mat vocabulary;
@@ -44,10 +47,11 @@ vector<string> predictions;
 void getClasses();
 void loadVocabulary();
 void setVocabulary();
-Mat calcDescriptor(string imageName);
+Mat calcDescriptor();
 void loadSVM();
-void testSVM(string filename, Mat current_descriptor);
+void testSVM(Mat current_descriptor);
 void computePredictResults();
+void renderJSON();
 
 void getClasses()
 {
@@ -78,32 +82,6 @@ void getClasses()
 	}
 
 	fclose(in);
-
-	/**** TESTING.DATA ****/
-
-	FILE *in2;
-
-	if ((in2 = fopen(testing_data.c_str(), "rt")) != NULL)
-	{
-		char buffer[100];
-
-		while (read_line(in2, buffer, sizeof buffer))
-		{
-			vector<string> line;
-			line = parseLine(buffer);
-
-			testing_files.push_back(line[0]);
-			testing_classes.push_back(line[1]);
-		}
-	}
-
-	else
-	{
-		cout << "Probleme fichier : " << testing_data << endl;
-		exit(-1);
-	}
-
-	fclose(in2);
 }
 
 void loadVocabulary()
@@ -122,21 +100,21 @@ void setVocabulary()
 	cout << "Vocabulary set" << endl << endl;
 }
 
-Mat calcDescriptor(string imageName)
+Mat calcDescriptor()
 {
 	vector<KeyPoint> imageKeypoints;
 	Mat bowDescriptor;
 
-	Mat colorImage = imread(imageName);
+	Mat colorImage = imread(uploaded_image);
 
 	if (!colorImage.cols)
 	{
-		cout << "Error while opening file " << imageName << endl;
+		cout << "Error while opening file " << uploaded_image << endl;
 	}
 
 	else
 	{
-		cout << "Loading image: " << imageName << endl;
+		cout << "Loading image: " << uploaded_image << endl;
 	}
 
 	featureDetector->detect(colorImage, imageKeypoints);
@@ -144,7 +122,7 @@ Mat calcDescriptor(string imageName)
 
 	if (!bowDescriptor.cols)
 	{
-		cout << "Error while computing BOW histogram for file " << imageName << endl ;
+		cout << "Error while computing BOW histogram for file " << uploaded_image << endl ;
 	}
 
 	else
@@ -168,15 +146,9 @@ void loadSVM()
 	cout << endl;
 }
 
-void testSVM(string filename, Mat bowDescriptors)
+void testSVM(Mat bowDescriptors)
 {
 	cout << "SVM prediction" << endl;
-
-	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
-
-	out.open(res_file, ios::out | ios::app);
-	out << "FILE: " << filename << endl;
 
 	string prediction;
 	float best_score;
@@ -195,20 +167,14 @@ void testSVM(string filename, Mat bowDescriptors)
 		if (svm_index == 0 || score >= best_score)
 		{
 			prediction = training_classes[svm_index];
+			predictions.push_back(prediction);
 			best_score = score;
 			cout << "Best score: " << best_score << endl;
+			cout << "Prediction: " << prediction << endl;
 		}
-
-		out << "SVM working class: " << training_classes[svm_index] << endl;
-		out << "Score: " << score << endl;
 	}
 
-	cout << "Prediction: " << prediction << endl << endl;
-
-	predictions.push_back(prediction);
-
-	out << endl << endl;
-	out.close();
+	cout << endl;
 }
 
 void computePredictResults()
@@ -222,45 +188,39 @@ void computePredictResults()
 	setVocabulary();
 	loadSVM();
 
-	for (size_t file_i = 0; file_i < testing_files.size(); file_i++)
+	current_descriptor = calcDescriptor();
+	testSVM(current_descriptor);
+
+	renderJSON();
+}
+
+void renderJSON()
+{
+	ofstream out;
+	out.open(log_file, ios::out | ios::app);
+
+	out << "[ ";
+
+	for (size_t i = predictions.size() - 1; i > 0; i--)
 	{
-		image_to_open = data_directory + TESTING_FOLDER + testing_files[file_i] + ".jpg";
-		current_descriptor = calcDescriptor(image_to_open);
-		testSVM(image_to_open, current_descriptor);
+		out << "'" << predictions[i] << "', ";
 	}
 
-	float global_score = 0.0;
-	float round_score;
+	out << "'" << predictions[0] << "' ]";
 
-	for (size_t j = 0; j < predictions.size(); j++)
-	{
-		if (predictions[j] == testing_classes[j])
-		{
-			global_score += 1.0;
-		}
-
-		round_score = 100 * global_score / predictions.size();
-
-		cout << "File: " << testing_files[j] << ".jpg" << endl;
-		cout << "Actual class: " << testing_classes[j] << endl;
-		cout << "Prediction was: " << predictions[j] << endl << endl;
-	}
-
-	cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
-	cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
-
+	out.close();
 }
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C" << endl;
+	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C Image_to_analyze Log_file" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc != 4)
+	if (argc != 6)
 	{
 		help(argv);
 		exit(-1);
@@ -291,13 +251,13 @@ int main(int argc, char* argv[])
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
+	uploaded_image = argv[4];
+	log_file = argv[5];
+
+	remove(log_file.c_str());
 
 	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;
-	testing_data = data_directory + TESTING_DATA_FILE;
-
-	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
-	remove(res_file.c_str());
 
 	getClasses();
 	computePredictResults();
