@@ -246,7 +246,7 @@ void trainSVM()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "Data_Folder C NbrCluster" << endl;
+	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
