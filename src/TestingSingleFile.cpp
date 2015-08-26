@@ -203,10 +203,10 @@ void renderJSON()
 
 	for (size_t i = predictions.size() - 1; i > 0; i--)
 	{
-		out << "'" << predictions[i] << "', ";
+		out << "\"" << predictions[i] << "\", ";
 	}
 
-	out << "'" << predictions[0] << "' ]";
+	out << "\"" << predictions[0] << "\" ]";
 
 	out.close();
 }
