@@ -21,8 +21,8 @@ Ptr<DescriptorMatcher> descMatcher;
 // Le chemin vers le dossier principal contenant les données ainsi que celui vers le fichier training.data
 string data_directory, training_data, testing_data;
 
-// Vecteur contenant le ou les nombres de clusters à utiliser
-vector<int> nbr_cluster;
+// Le nombre de clusters à utiliser
+int nbr_cluster;
 
 // Représente l'ensemble des classes (plantes) présentes dans la base d'apprentisage et dans la base de test
 vector<string> training_classes, testing_classes, testing_files;
@@ -106,11 +106,11 @@ void getClasses()
 	fclose(in2);
 }
 
-void loadVocabulary(int i)
+void loadVocabulary()
 {
-	cout << "Using " << nbr_cluster[i] << " clusters" << endl << endl;
+	cout << "Using " << nbr_cluster << " clusters" << endl << endl;
 	cout << "Loading Vocabulary ...." << endl;
-	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster[i]) + ".xml.gz";
+	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster) + ".xml.gz";
 	vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
 	cout << "Vocabulary loaded" << endl << endl;
 }
@@ -155,11 +155,11 @@ Mat calcDescriptor(string imageName)
 	return bowDescriptor;
 }
 
-void loadSVM(int cln)
+void loadSVM()
 {
 	for (size_t i = 0; i < training_classes.size(); i++)
 	{
-		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string(nbr_cluster[cln]) + "." + to_string(c) + ".xml.gz";
+		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string(nbr_cluster) + "." + to_string(c) + ".xml.gz";
 		cout << "Loading SVM: " << svm_to_load << endl;
 		Ptr<SVM> svm = Algorithm::load<SVM>(svm_to_load);
 		svms.push_back(svm);
@@ -218,51 +218,49 @@ void computePredictResults()
 	Mat current_descriptor;
 	string image_to_open;
 
-	for (size_t i = 0; i < nbr_cluster.size(); i++)
+	loadVocabulary();
+	setVocabulary();
+	loadSVM();
+
+	for (size_t file_i = 0; file_i < testing_files.size(); file_i++)
 	{
-		loadVocabulary(i);
-		setVocabulary();
-		loadSVM(i);
-
-		for (size_t file_i = 0; file_i < testing_files.size(); file_i++)
-		{
-			image_to_open = data_directory + TESTING_FOLDER + testing_files[file_i] + ".jpg";
-			current_descriptor = calcDescriptor(image_to_open);
-			testSVM(image_to_open, current_descriptor);
-		}
-
-		float global_score = 0.0;
-		float round_score;
-
-		for (size_t j = 0; j < predictions.size(); j++)
-		{
-			if (predictions[j] == testing_classes[j])
-			{
-				global_score += 1.0;
-			}
-
-			round_score = 100 * global_score / predictions.size();
-
-			cout << "File: " << testing_files[j] << ".jpg" << endl;
-			cout << "Actual class: " << testing_classes[j] << endl;
-			cout << "Prediction was: " << predictions[j] << endl << endl;
-		}
-
-		cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
-		cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
+		image_to_open = data_directory + TESTING_FOLDER + testing_files[file_i] + ".jpg";
+		current_descriptor = calcDescriptor(image_to_open);
+		testSVM(image_to_open, current_descriptor);
 	}
+
+	float global_score = 0.0;
+	float round_score;
+
+	for (size_t j = 0; j < predictions.size(); j++)
+	{
+		if (predictions[j] == testing_classes[j])
+		{
+			global_score += 1.0;
+		}
+
+		round_score = 100 * global_score / predictions.size();
+
+		cout << "File: " << testing_files[j] << ".jpg" << endl;
+		cout << "Actual class: " << testing_classes[j] << endl;
+		cout << "Prediction was: " << predictions[j] << endl << endl;
+	}
+
+	cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
+	cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
+
 }
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "FeatureDetector DescriptorExtractor DescriptorMatcher NbrCluster SVM_c Directory" << endl;
+	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc < 4)
+	if (argc != 4)
 	{
 		help(argv);
 		exit(-1);
@@ -291,13 +289,8 @@ int main(int argc, char* argv[])
 	bowExtractor = new SoftBOWImgDescriptorExtractor(descExtractor, descMatcher); // SOFT ASSIGNMENT
 
 	data_directory = argv[1];
-
-	c = atof(argv[2]);
-
-	for (int i = 3; i < argc; i++)
-	{
-		nbr_cluster.push_back(atoi(argv[i]));
-	}
+	nbr_cluster = atoi(argv[2]);
+	c = atof(argv[3]);
 
 	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;
