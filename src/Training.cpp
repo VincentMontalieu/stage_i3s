@@ -1,6 +1,7 @@
 #include "ImageData.hpp"
 #include "Soft.hpp"
 #include <chrono>
+#include <fstream>
 
 using namespace std;
 using namespace cv;
