@@ -246,7 +246,7 @@ void trainSVM()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -297,6 +297,12 @@ int main(int argc, char* argv[])
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
 
 	cout << "TRAINING TIME: " << convertTime(duration) << endl;
+
+	ofstream out;
+	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	out.open(res_file, ios::out | ios::app);
+	out << "TRAINING TIME: " << convertTime(duration) << endl;
+	out.close();
 
 	return 0;
 }

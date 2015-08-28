@@ -83,7 +83,7 @@ Mat loadBOWDescriptor(string filename, string type)
 string convertTime(int seconds)
 {
 	int minutes = seconds / 60;
-	int rem_seconds = seconds % 60;
-	string time_string = to_string(minutes) + " min " + to_string(rem_seconds) + " sec";
+	int hours = minutes / 60;
+	string time_string = to_string(hours) + " hours " + to_string(minutes%60) + " min " + to_string(seconds%60) + " sec";
 	return time_string;
 }

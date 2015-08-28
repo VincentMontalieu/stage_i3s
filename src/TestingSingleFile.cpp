@@ -213,7 +213,7 @@ void renderJSON()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C Image_to_analyze Log_file" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C Image_to_analyze Log_file" << endl;
 }
 
 int main(int argc, char* argv[])

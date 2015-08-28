@@ -13,7 +13,6 @@
 #include <vector>
 #include <string>
 
-
 /***** Chemins vers des dossiers ou fichiers de l'architecture de données *****/
 
 const std::string MAIN_VOCAB_FOLDER = "main_vocab/";

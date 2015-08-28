@@ -174,6 +174,7 @@ void testSVM(string filename, Mat bowDescriptors)
 
 	ofstream out;
 	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
+	remove(res_file.c_str());
 
 	out.open(res_file, ios::out | ios::app);
 	out << "FILE: " << filename << endl;
@@ -249,11 +250,18 @@ void computePredictResults()
 	cout << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
 	cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
 
+	ofstream out;
+	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	remove(res_file.c_str());
+	out.open(res_file, ios::out | ios::app);
+	out << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
+	out << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
+	out.close();
 }
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << "Data_folder Nbr_cluster C" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -296,9 +304,6 @@ int main(int argc, char* argv[])
 	training_data = data_directory + TRAINING_DATA_FILE;
 	testing_data = data_directory + TESTING_DATA_FILE;
 
-	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
-	remove(res_file.c_str());
-
 	getClasses();
 	computePredictResults();
 
@@ -307,6 +312,12 @@ int main(int argc, char* argv[])
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
 
 	cout << "TESTING TIME: " << convertTime(duration) << endl;
+
+	ofstream out;
+	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	out.open(res_file, ios::out | ios::app);
+	out << "TESTING TIME: " << convertTime(duration) << endl;
+	out.close();
 
 	return 0;
 }
