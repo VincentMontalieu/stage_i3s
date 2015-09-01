@@ -4,6 +4,9 @@
 #include <utility>
 #include <math.h>
 #include <chrono>
+#include <map>
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 using namespace cv;
@@ -39,8 +42,8 @@ double c;
 // Le vecteur contenant tous les SVM chargés
 vector<Ptr<SVM>> svms;
 
-// Le vecteur contenant les classes prédites
-vector<string> predictions;
+// Le vecteur contenant les paires Espèce / Score
+vector<pair<string, float>> predictions;
 
 /**** Méthodes ****/
 
@@ -52,6 +55,13 @@ void loadSVM();
 void testSVM(Mat current_descriptor);
 void computePredictResults();
 void renderJSON();
+
+// Permet d'effectuer le tri du vecteur Espèces / Scores selon le score
+struct sort_pred {
+	bool operator()(const pair<string, float> &left, const pair<string, float> &right) {
+		return left.second > right.second;
+	}
+};
 
 void getClasses()
 {
@@ -151,7 +161,6 @@ void testSVM(Mat bowDescriptors)
 	cout << "SVM prediction" << endl;
 
 	string prediction;
-	float best_score;
 	float score;
 
 	for (size_t svm_index = 0; svm_index < svms.size(); svm_index++)
@@ -164,15 +173,12 @@ void testSVM(Mat bowDescriptors)
 		signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
 		score = signMul * scoreVal;
 
-		if (svm_index == 0 || score >= best_score)
-		{
-			prediction = training_classes[svm_index];
-			predictions.push_back(prediction);
-			best_score = score;
-			cout << "Best score: " << best_score << endl;
-			cout << "Prediction: " << prediction << endl;
-		}
+		prediction = training_classes[svm_index];
+
+		predictions.push_back(pair<string, float>(prediction, score));
 	}
+
+	sort(predictions.begin(), predictions.end(), sort_pred());
 
 	cout << endl;
 }
@@ -201,12 +207,25 @@ void renderJSON()
 
 	out << "[ ";
 
-	for (size_t i = predictions.size() - 1; i > 0; i--)
+	if (predictions.size() > 10)
 	{
-		out << "\"" << predictions[i] << "\", ";
+		for (size_t i = 0; i < 9; i++)
+		{
+			out << "{" << "\"class\": \"" << predictions[i].first << "\",\"score\": \"" << predictions[i].second << "\"},";
+		}
+
+		out << "{" << "\"class\": \"" << predictions[9].first << "\",\"score\": \"" << predictions[9].second << "\"}]";
 	}
 
-	out << "\"" << predictions[0] << "\" ]";
+	else
+	{
+		for (size_t i = 0; i < predictions.size() - 1; i++)
+		{
+			out << "{" << "\"class\": \"" << predictions[i].first << "\",\"score\": \"" << predictions[i].second << "\"},";
+		}
+
+		out << "{" << "\"class\": \"" << predictions[predictions.size() - 1].first << "\",\"score\": \"" << predictions[predictions.size() - 1].second << "\"}]";
+	}
 
 	out.close();
 }
