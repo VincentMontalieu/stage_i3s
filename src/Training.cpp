@@ -286,7 +286,6 @@ int main(int argc, char* argv[])
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
 
-	setDataDirectoryPath(data_directory);
 	training_data = data_directory + TRAINING_DATA_FILE;
 
 	createMainVocabulary();
