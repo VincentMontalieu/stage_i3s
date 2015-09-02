@@ -299,8 +299,7 @@ int main(int argc, char* argv[])
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
-
-	setDataDirectoryPath(data_directory);
+	
 	training_data = data_directory + TRAINING_DATA_FILE;
 	testing_data = data_directory + TESTING_DATA_FILE;
 

@@ -274,8 +274,7 @@ int main(int argc, char* argv[])
 	log_file = argv[5];
 
 	remove(log_file.c_str());
-
-	setDataDirectoryPath(data_directory);
+	
 	training_data = data_directory + TRAINING_DATA_FILE;
 
 	getClasses();
