@@ -1,5 +1,5 @@
 local:
 	make -f makefile.local
 
-zeus:
+server:
 	make -f makefile.server
