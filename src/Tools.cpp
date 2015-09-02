@@ -31,17 +31,6 @@ vector<string> parseLine(char line[100])
 	return res;
 }
 
-void setDataDirectoryPath(string& path)
-{
-	if (!path.empty())
-	{
-		if (path.back() != '/')
-		{
-			path += "/";
-		}
-	}
-}
-
 void writeBOWImageDescriptor(const string& file, const Mat& bowImageDescriptor, string name)
 {
 	cout << "Saving in " << file << ".xml.gz" << endl << endl;
@@ -84,6 +73,6 @@ string convertTime(int seconds)
 {
 	int minutes = seconds / 60;
 	int hours = minutes / 60;
-	string time_string = to_string(hours) + " hours " + to_string(minutes%60) + " min " + to_string(seconds%60) + " sec";
+	string time_string = to_string((long long)hours) + " hours " + to_string((long long)minutes%60) + " min " + to_string((long long)seconds%60) + " sec";
 	return time_string;
 }
