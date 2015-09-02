@@ -173,7 +173,7 @@ void testSVM(string filename, Mat bowDescriptors)
 	cout << "SVM prediction" << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "results.txt";
+	string res_file = data_directory + RESULTS_FOLDER + "SVM_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) +".txt";
 	remove(res_file.c_str());
 
 	out.open(res_file, ios::out | ios::app);
@@ -251,11 +251,11 @@ void computePredictResults()
 	cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	string res_file = data_directory + RESULTS_FOLDER + "SVM_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) +".txt";
 	remove(res_file.c_str());
 	out.open(res_file, ios::out | ios::app);
 	out << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
-	out << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
+	out << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl;
 	out.close();
 }
 
@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
 	cout << "TESTING TIME: " << convertTime(duration) << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	string res_file = data_directory + RESULTS_FOLDER + "TESTING_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) +".txt";
 	out.open(res_file, ios::out | ios::app);
 	out << "TESTING TIME: " << convertTime(duration) << endl;
 	out.close();

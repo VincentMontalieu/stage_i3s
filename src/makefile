@@ -1,5 +1,5 @@
 local:
-  make -f makefile.local
+	make -f makefile.local
 
 zeus:
-  make -f makefile.zeus
+	make -f makefile.zeus
