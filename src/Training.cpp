@@ -135,7 +135,7 @@ void createMainVocabulary()
 	Mat vocabulary = bowTrainer->cluster();
 	cout << "Clustering completed" << endl << endl;
 
-	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster);
+	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string((long long)nbr_cluster);
 	writeBOWImageDescriptor(vocabulary_file_path, vocabulary, "vocabulary");
 	cout << "DONE" << endl;
 
@@ -150,7 +150,7 @@ void createBOWHistograms()
 	cout << "1 BOW trainer for this session" << endl << endl;
 
 	cout << "Using " << nbr_cluster << " ...." << endl << endl;
-	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster) + ".xml.gz";
+	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string((long long)nbr_cluster) + ".xml.gz";
 	vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
 	cout << "Vocabulary loaded" << endl;
 	calcDescriptor();
@@ -189,7 +189,7 @@ void calcDescriptor()
 			cout << "Error while computing BOW histogram for file " << img_to_open << endl;
 		}
 
-		writeBOWImageDescriptor(data_directory + PLANTS_VOCABS_FOLDER + single_img_name + "." + to_string(nbr_cluster), bowDescriptor, "imageDescriptor");
+		writeBOWImageDescriptor(data_directory + PLANTS_VOCABS_FOLDER + single_img_name + "." + to_string((long long)nbr_cluster), bowDescriptor, "imageDescriptor");
 	}
 }
 
@@ -204,7 +204,7 @@ void trainSVM()
 
 	for (size_t i = 0; i < text_lines.size(); i++)
 	{
-		string descriptor_file_path = data_directory + PLANTS_VOCABS_FOLDER + text_lines[i][0] + ".jpg." + to_string(nbr_cluster) + ".xml.gz";
+		string descriptor_file_path = data_directory + PLANTS_VOCABS_FOLDER + text_lines[i][0] + ".jpg." + to_string((long long)nbr_cluster) + ".xml.gz";
 		Mat bowDescriptor = loadBOWDescriptor(descriptor_file_path, "imageDescriptor");
 		Mat submat = trainData->row((int)i);
 		bowDescriptor.copyTo(submat);
@@ -232,7 +232,7 @@ void trainSVM()
 		svm->train(*trainData, ROW_SAMPLE, *responses);
 
 		cout << "SVM trained for " << classes[i] << endl;
-		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string(nbr_cluster) + "." + to_string(c) + ".xml.gz";
+		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
 		cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
 
 		svm->save(svm_file_to_save);

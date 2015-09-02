@@ -98,7 +98,7 @@ void loadVocabulary()
 {
 	cout << "Using " << nbr_cluster << " clusters" << endl << endl;
 	cout << "Loading Vocabulary ...." << endl;
-	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string(nbr_cluster) + ".xml.gz";
+	string vocabulary_file_path = data_directory + MAIN_VOCAB_FOLDER + "vocabulary." + to_string((long long)nbr_cluster) + ".xml.gz";
 	vocabulary = loadBOWDescriptor(vocabulary_file_path, "vocabulary");
 	cout << "Vocabulary loaded" << endl << endl;
 }
@@ -147,7 +147,7 @@ void loadSVM()
 {
 	for (size_t i = 0; i < training_classes.size(); i++)
 	{
-		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string(nbr_cluster) + "." + to_string(c) + ".xml.gz";
+		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
 		cout << "Loading SVM: " << svm_to_load << endl;
 		Ptr<SVM> svm = Algorithm::load<SVM>(svm_to_load);
 		svms.push_back(svm);
