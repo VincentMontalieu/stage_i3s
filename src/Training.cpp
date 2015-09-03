@@ -41,6 +41,9 @@ Mat vocabulary;
 // Le taux d'erreur toléré pour le SVM
 double c;
 
+// Le myGamma du Kernel RBF
+double myGamma;
+
 /**** Méthodes ****/
 
 void calcDescriptor();
@@ -222,7 +225,8 @@ void trainSVM()
 
 		Ptr<SVM> svm = SVM::create();
 		svm->setType(SVM::C_SVC);
-		svm->setKernel(SVM::LINEAR);
+		svm->setKernel(SVM::RBF);
+		svm->setGamma(myGamma);
 		svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 		svm->setC(c);
 
@@ -232,7 +236,7 @@ void trainSVM()
 		svm->train(*trainData, ROW_SAMPLE, *responses);
 
 		cout << "SVM trained for " << classes[i] << endl;
-		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
+		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + "." + to_string((long long)myGamma) + ".xml.gz";
 		cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
 
 		svm->save(svm_file_to_save);
@@ -247,14 +251,14 @@ void trainSVM()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C gamma" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc != 4)
+	if (argc != 5)
 	{
 		help(argv);
 		exit(-1);
@@ -285,6 +289,7 @@ int main(int argc, char* argv[])
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
+	myGamma = atof(argv[4]);
 
 	training_data = data_directory + TRAINING_DATA_FILE;
 
@@ -299,9 +304,9 @@ int main(int argc, char* argv[])
 	cout << "TRAINING TIME: " << convertTime(duration) << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "log.txt";
+	string res_file = data_directory + RESULTS_FOLDER + "training_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + "_" + to_string((long long)myGamma) + ".txt";;
 	out.open(res_file, ios::out | ios::app);
-	out << "TRAINING TIME: " << convertTime(duration) << endl;
+	out << "TRAINING TIME: " << convertTime(duration);
 	out.close();
 
 	return 0;
