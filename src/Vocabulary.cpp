@@ -38,19 +38,11 @@ vector<string> classes;
 // La matrice qui contient le vocabulaire principal
 Mat vocabulary;
 
-// Le taux d'erreur toléré pour le SVM
-double c;
-
-// Le myGamma du Kernel RBF
-double myGamma;
-
 /**** Méthodes ****/
 
 void calcDescriptor();
 void createMainVocabulary();
 void createBOWHistograms();
-void trainSVM();
-
 
 void createMainVocabulary()
 {
@@ -196,69 +188,16 @@ void calcDescriptor()
 	}
 }
 
-void trainSVM()
-{
-	cout << endl << endl << "********* SVM TRAINING *********" << endl << endl;
-
-	Mat* trainData = NULL;
-	trainData = new Mat((int)text_lines.size(), vocabulary.rows, CV_32FC1);
-
-	cout << "Loading descriptors .... " << endl;
-
-	for (size_t i = 0; i < text_lines.size(); i++)
-	{
-		string descriptor_file_path = data_directory + PLANTS_VOCABS_FOLDER + text_lines[i][0] + ".jpg." + to_string((long long)nbr_cluster) + ".xml.gz";
-		Mat bowDescriptor = loadBOWDescriptor(descriptor_file_path, "imageDescriptor");
-		Mat submat = trainData->row((int)i);
-		bowDescriptor.copyTo(submat);
-	}
-
-	for (size_t i = 0; i < classes.size(); i++)
-	{
-		// Matrice contenant les labels, ici 1 ou -1
-		Mat* responses = new Mat((int)text_lines.size(), 1, CV_32SC1);
-
-		for (size_t j = 0; j < text_lines.size(); j++)
-		{
-			responses->at<int>((int)j) = (text_lines[j][1] == classes[i]) ? 1 : -1;
-		}
-
-		Ptr<SVM> svm = SVM::create();
-		svm->setType(SVM::C_SVC);
-		svm->setKernel(SVM::RBF);
-		svm->setGamma(myGamma);
-		svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-		svm->setC(c);
-
-		cout << "SVM training on class: " << classes[i] << " ...." << endl;
-
-		// Train the SVM
-		svm->train(*trainData, ROW_SAMPLE, *responses);
-
-		cout << "SVM trained for " << classes[i] << endl;
-		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + "." + to_string((long long)myGamma) + ".xml.gz";
-		cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
-
-		svm->save(svm_file_to_save);
-
-		delete responses;
-	}
-
-	delete trainData;
-
-	cout << endl << "DONE TRAINING SVM" << endl;
-}
-
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C gamma" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc != 5)
+	if (argc != 3)
 	{
 		help(argv);
 		exit(-1);
@@ -288,25 +227,23 @@ int main(int argc, char* argv[])
 
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
-	c = atof(argv[3]);
-	myGamma = atof(argv[4]);
 
 	training_data = data_directory + TRAINING_DATA_FILE;
 
 	createMainVocabulary();
 	createBOWHistograms();
-	trainSVM();
 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
 
-	cout << "TRAINING TIME: " << convertTime(duration) << endl;
+	cout << "Clustering time: " << convertTime(duration) << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "training_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + "_" + to_string((long long)myGamma) + ".txt";;
+	string res_file = data_directory + RESULTS_FOLDER + "training_vocabulary_" + to_string((long long)nbr_cluster) + ".txt";
+	remove(res_file.c_str());
 	out.open(res_file, ios::out | ios::app);
-	out << "TRAINING TIME: " << convertTime(duration);
+	out << "Clustering time: " << convertTime(duration);
 	out.close();
 
 	return 0;

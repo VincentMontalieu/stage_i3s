@@ -51,6 +51,7 @@ Mat calcDescriptor(string imageName);
 void loadSVM();
 void testSVM(string filename, Mat current_descriptor);
 void computePredictResults();
+double sigmoid_predict(double decision_value, double A, double B);
 
 void getClasses()
 {
@@ -177,7 +178,7 @@ void testSVM(string filename, Mat bowDescriptors)
 
 	string prediction;
 	float best_score;
-	float score;
+	float score, score1;
 
 	for (size_t svm_index = 0; svm_index < svms.size(); svm_index++)
 	{
@@ -186,8 +187,13 @@ void testSVM(string filename, Mat bowDescriptors)
 		float classVal = svms[svm_index]->predict(bowDescriptors);
 		float scoreVal = svms[svm_index]->predict(bowDescriptors, noArray(), StatModel::Flags::RAW_OUTPUT);
 
-		signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
-		score = signMul * scoreVal;
+		double A = svms[svm_index]->getProbA();
+		double B = svms[svm_index]->getProbB();
+
+		//signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
+		//score1 = signMul * scoreVal;
+
+		score = sigmoid_predict(scoreVal, A, B);
 
 		if (svm_index == 0 || score >= best_score)
 		{
@@ -200,6 +206,15 @@ void testSVM(string filename, Mat bowDescriptors)
 	cout << "Prediction: " << prediction << endl << endl;
 
 	predictions.push_back(prediction);
+}
+
+double sigmoid_predict(double decision_value, double A, double B)
+{
+	double fApB = decision_value * A + B;
+	if (fApB >= 0)
+		return exp(-fApB) / (1.0 + exp(-fApB));
+	else
+		return 1.0 / (1 + exp(fApB)) ;
 }
 
 void computePredictResults()

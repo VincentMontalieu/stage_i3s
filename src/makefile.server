@@ -1,15 +1,17 @@
 CC = g++
 CFLAGS = -Wall -std=c++0x
-EXEC_NAME_1 = training.out
-EXEC_NAME_2 = testing.out
-EXEC_NAME_3 = testing_single_file.out
+EXEC_NAME_1 = vocabulary.out
+EXEC_NAME_2 = svm.out
+EXEC_NAME_3 = testing.out
+EXEC_NAME_4 = testing_single_file.out
 INCLUDES =
 LIBS = /usr/local/lib/libopencv_calib3d.so /usr/local/lib/libopencv_core.so /usr/local/lib/libopencv_features2d.so /usr/local/lib/libopencv_flann.so /usr/local/lib/libopencv_highgui.so /usr/local/lib/libopencv_imgcodecs.so /usr/local/lib/libopencv_imgproc.so /usr/local/lib/libopencv_ml.so /usr/local/lib/libopencv_objdetect.so /usr/local/lib/libopencv_photo.so /usr/local/lib/libopencv_shape.so /usr/local/lib/libopencv_stitching.so /usr/local/lib/libopencv_superres.so /usr/local/lib/libopencv_video.so /usr/local/lib/libopencv_videoio.so /usr/local/lib/libopencv_videostab.so
-OBJ_FILES_1 = Tools.o Soft.o ImageData.o Training.o
-OBJ_FILES_2 = Tools.o Soft.o Testing.o
-OBJ_FILES_3 = Tools.o Soft.o TestingSingleFile.o
+OBJ_FILES_1 = Tools.o Soft.o ImageData.o Vocabulary.o
+OBJ_FILES_2 = Tools.o Soft.o ImageData.o Svm.o
+OBJ_FILES_3 = Tools.o Soft.o Testing.o
+OBJ_FILES_4 = Tools.o Soft.o TestingSingleFile.o
 
-all : $(EXEC_NAME_1) $(EXEC_NAME_2) $(EXEC_NAME_3)
+all : $(EXEC_NAME_1) $(EXEC_NAME_2) $(EXEC_NAME_3) $(EXEC_NAME_4)
 
 clean :
 	rm *.o
@@ -25,6 +27,9 @@ $(EXEC_NAME_2) : $(OBJ_FILES_2)
 
 $(EXEC_NAME_3) : $(OBJ_FILES_3)
 	$(CC) -o $(EXEC_NAME_3) $(OBJ_FILES_3) $(LIBS)
+
+$(EXEC_NAME_4) : $(OBJ_FILES_4)
+	$(CC) -o $(EXEC_NAME_4) $(OBJ_FILES_4) $(LIBS)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
