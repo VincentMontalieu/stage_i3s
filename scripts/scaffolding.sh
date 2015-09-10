@@ -1,33 +1,20 @@
 #!/bin/bash
 
-#le dernier sed probleme \r entre windows et linux
-grep "<IndividualPlantId>" *.xml | sed "s/<[^>]*>//g" | cut -d":" -f2 |  sort -n |uniq -c | sort -n | sed -e 's/\r//g' > /tmp/res
+nb_images=`ls *.jpg | wc -l`
+nb_train=$(($nb_images*80/100))
+
 mkdir training
 mkdir testing
-while read line
-do
-	nbr=`echo $line | awk -F" " '{print $1}'`
-	id=`echo $line | awk -F" " '{print $2}'`
-	if [ $nbr -gt 1 ]
-	then
-		let b=$(($nbr/2))
-		let a=$(($nbr-$b))
-		echo "id = "$id
-		echo "nbr = "$nbr
-		grep '<IndividualPlantId>'$id'</IndividualPlantId>' *.xml > /tmp/g
-		mv `head -n $a /tmp/g | cut -d":" -f1 | sed -e 's/.xml/.jpg/g'` training
-		mv `head -n $a /tmp/g | cut -d":" -f1` training
-		mv `tail -n $b /tmp/g | cut -d":" -f1 | sed -e 's/.xml/.jpg/g'` testing
-		mv `tail -n $b /tmp/g | cut -d":" -f1` testing
-	else
-		echo "id = "$id
-		echo "nbr = "$nbr
-		grep '<IndividualPlantId>'$id'</IndividualPlantId>' *.xml > /tmp/g
-		mv `head -n 1 /tmp/g | cut -d":" -f1 | sed -e 's/.xml/.jpg/g'` training
-		mv `head -n 1 /tmp/g | cut -d":" -f1` training
 
-	fi
-done < /tmp/res
+ls *.xml | sort -R | tail -$nb_train | while read file; do
+	mv `ls $file | sed -e 's/.xml/.jpg/g'` training
+	mv $file training
+done
+
+ls *.xml | while read file; do
+	mv `ls $file | sed -e 's/.xml/.jpg/g'` testing
+	mv $file testing
+done
 
 shopt -s nullglob globstar
 

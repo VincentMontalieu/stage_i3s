@@ -2,6 +2,7 @@
 #include "Soft.hpp"
 #include <chrono>
 #include <fstream>
+#include <omp.h>
 
 using namespace std;
 using namespace cv;
@@ -94,6 +95,8 @@ void trainSVM()
 		bowDescriptor.copyTo(submat);
 	}
 
+	float w1 = 0, w2 = 0;
+
 	for (size_t i = 0; i < classes.size(); i++)
 	{
 		// Matrice contenant les labels, ici 1 ou -1
@@ -102,7 +105,13 @@ void trainSVM()
 		for (size_t j = 0; j < text_lines.size(); j++)
 		{
 			responses->at<int>((int)j) = (text_lines[j][1] == classes[i]) ? 1 : -1;
+			(text_lines[j][1] == classes[i]) ? w1++ : w2++;
+
 		}
+
+		Mat weights = Mat::zeros(2, 1, CV_32FC1);
+		weights.at<float>(0) = (float) w1 / (w1 + w2);
+		weights.at<float>(1) = (float) w2 / (w1 + w2);
 
 		Ptr<SVM> svm = SVM::create();
 		svm->setType(SVM::C_SVC);
@@ -110,6 +119,7 @@ void trainSVM()
 		//svm->setGamma(myGamma);
 		svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 		svm->setC(c);
+		svm->setClassWeights(weights);
 
 		cout << "SVM training on class: " << classes[i] << " ...." << endl;
 
@@ -139,6 +149,8 @@ void help(char* argv[])
 
 int main(int argc, char* argv[])
 {
+	omp_set_num_threads(4);
+
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	if (argc != 5)

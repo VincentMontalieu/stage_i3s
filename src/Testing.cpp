@@ -190,8 +190,8 @@ void testSVM(string filename, Mat bowDescriptors)
 		double A = svms[svm_index]->getProbA();
 		double B = svms[svm_index]->getProbB();
 
-		//signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
-		//score1 = signMul * scoreVal;
+		signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
+		score1 = signMul * scoreVal;
 
 		score = sigmoid_predict(scoreVal, A, B);
 
