@@ -33,9 +33,6 @@ Mat vocabulary;
 // Le taux d'erreur toléré pour le SVM
 double c;
 
-// Le gamma du Kernel RBF
-double myGamma;
-
 // Le vecteur contenant tous les SVM chargés
 vector<Ptr<SVM>> svms;
 
@@ -163,7 +160,7 @@ void loadSVM()
 {
 	for (size_t i = 0; i < training_classes.size(); i++)
 	{
-		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + "." + to_string((long long)myGamma) + ".xml.gz";
+		string svm_to_load = data_directory + PLANTS_SVM_FOLDER + "svm:" + training_classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
 		cout << "Loading SVM: " << svm_to_load << endl;
 		Ptr<SVM> svm = Algorithm::load<SVM>(svm_to_load);
 		svms.push_back(svm);
@@ -256,7 +253,7 @@ void computePredictResults()
 	cout << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "testing_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + "_" + to_string((long long)myGamma) + ".txt";
+	string res_file = data_directory + RESULTS_FOLDER + "testing_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + ".txt";
 	out.open(res_file, ios::out | ios::app);
 	out << "GOOD PREDICTIONS: " << global_score << " / " << predictions.size() << endl;
 	out << "GLOBAL SCORE: " << trunc(round_score) << " % " << endl;
@@ -265,14 +262,14 @@ void computePredictResults()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C Gamma" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
 {
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc != 5)
+	if (argc != 4)
 	{
 		help(argv);
 		exit(-1);
@@ -303,7 +300,6 @@ int main(int argc, char* argv[])
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
-	myGamma = atof(argv[4]);
 
 	training_data = data_directory + TRAINING_DATA_FILE;
 	testing_data = data_directory + TESTING_DATA_FILE;
@@ -318,7 +314,7 @@ int main(int argc, char* argv[])
 	cout << "TESTING TIME: " << convertTime(duration) << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "testing_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + "_" + to_string((long long)myGamma) + ".txt";
+	string res_file = data_directory + RESULTS_FOLDER + "testing_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + ".txt";
 	out.open(res_file, ios::out | ios::app);
 	out << "TESTING TIME: " << convertTime(duration);
 	out.close();

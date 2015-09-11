@@ -2,7 +2,6 @@
 #include "Soft.hpp"
 #include <chrono>
 #include <fstream>
-#include <omp.h>
 
 using namespace std;
 using namespace cv;
@@ -194,9 +193,7 @@ void help(char* argv[])
 }
 
 int main(int argc, char* argv[])
-{
-	omp_set_num_threads(4);
-	
+{	
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	if (argc != 3)

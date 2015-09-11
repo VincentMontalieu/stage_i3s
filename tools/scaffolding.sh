@@ -1,7 +1,7 @@
 #!/bin/bash
 
 nb_images=`ls *.jpg | wc -l`
-nb_train=$(($nb_images*80/100))
+nb_train=$(($nb_images*100/100))
 
 mkdir training
 mkdir testing

@@ -2,7 +2,6 @@
 #include "Soft.hpp"
 #include <chrono>
 #include <fstream>
-#include <omp.h>
 
 using namespace std;
 using namespace cv;
@@ -30,9 +29,6 @@ Mat vocabulary;
 
 // Le taux d'erreur toléré pour le SVM
 double c;
-
-// Le myGamma du Kernel RBF
-double myGamma;
 
 /**** Méthodes ****/
 
@@ -116,7 +112,6 @@ void trainSVM()
 		Ptr<SVM> svm = SVM::create();
 		svm->setType(SVM::C_SVC);
 		svm->setKernel(SVM::LINEAR);
-		//svm->setGamma(myGamma);
 		svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 		svm->setC(c);
 		svm->setClassWeights(weights);
@@ -129,7 +124,7 @@ void trainSVM()
 		svm->train_probability(data);
 
 		cout << "SVM trained for " << classes[i] << endl;
-		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + "." + to_string((long long)myGamma) + ".xml.gz";
+		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
 		cout << "Saving SVM training file in " << svm_file_to_save << endl << endl;
 
 		svm->save(svm_file_to_save);
@@ -144,16 +139,14 @@ void trainSVM()
 
 void help(char* argv[])
 {
-	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C gamma" << endl;
+	cout << "Usage: " << argv[0] << " Data_folder Nbr_cluster C" << endl;
 }
 
 int main(int argc, char* argv[])
 {
-	omp_set_num_threads(4);
-
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	if (argc != 5)
+	if (argc != 4)
 	{
 		help(argv);
 		exit(-1);
@@ -162,7 +155,6 @@ int main(int argc, char* argv[])
 	data_directory = argv[1];
 	nbr_cluster = atoi(argv[2]);
 	c = atof(argv[3]);
-	myGamma = atof(argv[4]);
 
 	training_data = data_directory + TRAINING_DATA_FILE;
 
@@ -177,7 +169,7 @@ int main(int argc, char* argv[])
 	cout << "SVM training time: " << convertTime(duration) << endl;
 
 	ofstream out;
-	string res_file = data_directory + RESULTS_FOLDER + "training_SVM_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + "_" + to_string((long long)myGamma) + ".txt";;
+	string res_file = data_directory + RESULTS_FOLDER + "training_SVM_" + to_string((long long)nbr_cluster) + "_" + to_string((long long)c) + ".txt";;
 	remove(res_file.c_str());
 	out.open(res_file, ios::out | ios::app);
 	out << "SVM training time: " << convertTime(duration);
