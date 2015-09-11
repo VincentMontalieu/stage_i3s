@@ -184,18 +184,22 @@ void testSVM(string filename, Mat bowDescriptors)
 		float classVal = svms[svm_index]->predict(bowDescriptors);
 		float scoreVal = svms[svm_index]->predict(bowDescriptors, noArray(), StatModel::Flags::RAW_OUTPUT);
 
-		double A = svms[svm_index]->getProbA();
-		double B = svms[svm_index]->getProbB();
+		
+		// On récupère le A et B de la sigmoide associée au SVM => mise à jour personnelle du code source d'OpenCV, peut ne pas fonctionner
+		// d'où la mise en commentaire
+		
+		//double A = svms[svm_index]->getProbA();
+		//double B = svms[svm_index]->getProbB();
 
 		signMul = (classVal < 0) == (scoreVal < 0) ? 1.f : -1.f;
 		score1 = signMul * scoreVal;
 
-		score = sigmoid_predict(scoreVal, A, B);
+		//score = sigmoid_predict(scoreVal, A, B);
 
-		if (svm_index == 0 || score >= best_score)
+		if (svm_index == 0 || score1 >= best_score)
 		{
 			prediction = training_classes[svm_index];
-			best_score = score;
+			best_score = score1;
 			cout << "Best score: " << best_score << endl;
 		}
 	}

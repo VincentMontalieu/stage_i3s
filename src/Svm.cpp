@@ -105,6 +105,7 @@ void trainSVM()
 
 		}
 
+		// On équilibre le SVM
 		Mat weights = Mat::zeros(2, 1, CV_32FC1);
 		weights.at<float>(0) = (float) w1 / (w1 + w2);
 		weights.at<float>(1) = (float) w2 / (w1 + w2);
@@ -121,7 +122,10 @@ void trainSVM()
 		// Train the SVM
 		//svm->trainAuto(trainData, 10, SVM::getDefaultGrid(SVM::C), SVM::getDefaultGrid(SVM::GAMMA),  SVM::getDefaultGrid(SVM::P),  SVM::getDefaultGrid(SVM::NU),  SVM::getDefaultGrid(SVM::COEF),  SVM::getDefaultGrid(SVM::DEGREE), true);
 		Ptr<TrainData> data = TrainData::create( *trainData, ROW_SAMPLE, *responses );
-		svm->train_probability(data);
+		svm->train(data);
+		
+		// Nouvelle méthode OpenCV basée sur LIBSVM faite sur mesure qui entraîne un SVM et une sigmoide
+		//svm->train_probability(data);
 
 		cout << "SVM trained for " << classes[i] << endl;
 		string svm_file_to_save = data_directory + PLANTS_SVM_FOLDER + "svm:" + classes[i] + "." + to_string((long long)nbr_cluster) + "." + to_string((long long)c) + ".xml.gz";
